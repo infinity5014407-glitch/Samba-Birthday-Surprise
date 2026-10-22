@@ -27,6 +27,27 @@ body{background:#170d27;color:#fff0fa}
 @keyframes doodleBob{0%,100%{transform:translateY(0) rotate(-7deg)}50%{transform:translateY(-15px) rotate(7deg)}}@keyframes doodleWiggle{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.08)}}@keyframes candleDance{0%,100%{transform:translateY(0) rotate(-5deg);filter:drop-shadow(0 0 5px #ff9e64)}50%{transform:translateY(-8px) rotate(5deg);filter:drop-shadow(0 0 14px #ffd27d)}}@keyframes lovePulse{0%,100%{transform:scale(.85);opacity:.65}50%{transform:scale(1.2);opacity:1}}@keyframes twinkleDoodle{0%,100%{opacity:.35;transform:scale(.8) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
 @media(max-width:580px){.birthday-doodle.cake{left:-2%;top:14%}.birthday-doodle.cupcake{right:-2%;top:63%}.birthday-doodle.bow{right:3%;top:8%}.birthday-doodle.candle{left:2%;bottom:8%}.birthday-doodle.teddy{right:1%;bottom:5%}.photo-grid{grid-template-columns:1fr 1fr}.photo-frame{padding:7px}.photo-frame figcaption{font-size:.75rem}}
 @media(prefers-reduced-motion:reduce){.birthday-doodle{animation:none!important}}
+
+/* Sweet 3D birthday interactions */
+.photo-grid{perspective:1200px;perspective-origin:50% 40%}
+.photo-frame{transform-style:preserve-3d;will-change:transform;transition:transform .42s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s;box-shadow:0 22px 50px #5b2c6340,0 0 0 1px #ffffff70}
+.photo-frame:hover{border-color:#e6a2cd;box-shadow:0 30px 65px #6e3b7a40,0 0 28px #e7a1ce35}
+.photo-frame img{transform:translateZ(22px);transition:transform .4s ease,filter .4s;cursor:zoom-in}
+.photo-frame:hover img{transform:translateZ(32px) scale(1.012);filter:saturate(1.08)}
+.photo-frame figcaption{transform:translateZ(12px)}
+.card,.letter,.contact{transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.card:hover{box-shadow:0 22px 50px #89547c28;}
+.card .emoji{display:inline-block;transform:translateZ(20px);filter:drop-shadow(0 8px 12px #e7a1ce55)}
+.birthday-photo-viewer{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:#1c102deF;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;visibility:hidden;transition:opacity .28s,visibility .28s;perspective:1400px}
+.birthday-photo-viewer.open{opacity:1;visibility:visible}
+.birthday-photo-viewer figure{width:min(92vw,680px);max-height:90svh;margin:0;padding:12px;border:1px solid #e7a4ce;border-radius:24px;background:linear-gradient(145deg,#fff8fc,#f4e4fa);box-shadow:0 35px 100px #09051299;transform:rotateX(8deg) scale(.92) translateY(16px);transition:transform .4s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.birthday-photo-viewer.open figure{transform:rotateX(0) scale(1) translateY(0)}
+.birthday-photo-viewer img{display:block;max-width:100%;width:auto;height:auto;max-height:75svh;margin:auto;object-fit:contain;border-radius:15px;box-shadow:0 12px 32px #48264d30}
+.birthday-photo-viewer figcaption{text-align:center;padding:13px 8px 4px;color:#985180;font-family:var(--serif)}
+.birthday-photo-viewer button{position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;width:46px;height:46px;border:1px solid #f0b6d9;border-radius:50%;background:#fff3fa;color:#7d3c68;font-size:1.6rem;cursor:pointer;box-shadow:0 8px 25px #0003}
+.birthday-photo-viewer button:hover{transform:scale(1.06);background:#ffe4f2}
+@media(hover:none){.photo-frame:hover{box-shadow:0 22px 50px #5b2c6340}.photo-frame:hover img{transform:translateZ(22px)}}
+@media(prefers-reduced-motion:reduce){.photo-frame,.photo-frame img,.birthday-photo-viewer,.birthday-photo-viewer figure{transition:none!important;transform:none!important}}
 </style>
 </head>
 <body>
@@ -66,5 +87,32 @@ document.getElementById('ps').addEventListener('click',function(){const box=docu
 document.getElementById('celebrate').addEventListener('click',()=>{hearts(70);document.getElementById('ending').textContent='If wishes could travel as easily as messages, this one would already be with you. Happy birthday, Samba! ♡'});
 function hearts(n){const symbols=['♡','♥','✧','💗','✦'];for(let i=0;i<n;i++){const el=document.createElement('span');el.className='float';el.textContent=symbols[Math.floor(Math.random()*symbols.length)];el.style.left=Math.random()*100+'vw';el.style.setProperty('--dur',(5+Math.random()*7)+'s');el.style.fontSize=(14+Math.random()*18)+'px';document.body.appendChild(el);setTimeout(()=>el.remove(),12500)}}
 if(!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(()=>{if(surprise.classList.contains('open'))hearts(1)},1300);
+
+/* Pointer-responsive 3D cards and a sweet accessible photo viewer. */
+(()=>{
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(!reduced&&matchMedia('(hover:hover) and (pointer:fine)').matches){
+  document.querySelectorAll('#photos .photo-frame,.card,.letter,.contact').forEach(card=>{
+   card.addEventListener('pointermove',event=>{
+    const r=card.getBoundingClientRect(),x=(event.clientX-r.left)/r.width,y=(event.clientY-r.top)/r.height;
+    const tilt=card.matches('.photo-frame')?8:3.5;
+    card.style.transform='perspective(1000px) rotateX('+((.5-y)*tilt)+'deg) rotateY('+((x-.5)*tilt)+'deg) translateY(-3px)';
+   });
+   card.addEventListener('pointerleave',()=>{card.style.transform='';});
+  });
+ }
+ const images=[...document.querySelectorAll('#photos .photo-frame img')];
+ const labels=['A little memory ♡','A smile to keep ✨','For my Samba ♡'];
+ if(!images.length)return;
+ const viewer=document.createElement('div');viewer.className='birthday-photo-viewer';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Samba photo gallery');
+ viewer.innerHTML='<button type="button" aria-label="Close photo viewer">×</button><figure><img alt=""><figcaption></figcaption></figure>';document.body.appendChild(viewer);
+ const big=viewer.querySelector('img'),caption=viewer.querySelector('figcaption'),close=viewer.querySelector('button');let current=0,focusBefore=null;
+ function show(i){current=(i+images.length)%images.length;const img=images[current];big.src=img.currentSrc||img.src;big.alt=img.alt;caption.textContent=(labels[current]||'A little memory ♡')+' · '+(current+1)+' of '+images.length;}
+ function open(i){focusBefore=document.activeElement;show(i);viewer.classList.add('open');document.body.style.overflow='hidden';close.focus();}
+ function shut(){viewer.classList.remove('open');document.body.style.overflow='';big.removeAttribute('src');if(focusBefore&&focusBefore.focus)focusBefore.focus();}
+ images.forEach((img,i)=>{img.tabIndex=0;img.setAttribute('role','button');img.setAttribute('aria-label','Open '+img.alt);img.addEventListener('click',()=>open(i));img.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(i);}})});
+ close.addEventListener('click',shut);viewer.addEventListener('click',e=>{if(e.target===viewer)shut();});
+ document.addEventListener('keydown',e=>{if(!viewer.classList.contains('open'))return;if(e.key==='Escape')shut();if(e.key==='ArrowRight')show(current+1);if(e.key==='ArrowLeft')show(current-1);});
+})();
 </script>
 </body></html>
